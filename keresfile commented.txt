@@ -1,0 +1,61 @@
+import sys
+from seged import *
+
+
+class Feladat:
+
+    def __init__(self, kezdő, cél=None): # A feladat osztály konstruktora amely kap egy kezdő és egy cél értéket
+        self.kezdő = kezdő;
+        self.cél = cél
+
+    def rákövetkező(self, állapot): #Megkap egy állapotot amelynek a rákövetkező állapotát adja vissza
+        raise NotImplementedError
+
+    def érték(self):
+        raise NotImplementedError
+
+    def célteszt(self, állapot): #Megkap egy állapotot és megnézi hogy megfelel e a cél állapotnak és egy booleant add vissza
+       #return állapot == self.cél
+       raise NotImplementedError
+
+    def útköltség(self, c, állapot1, lépés, állapot2):
+        return c + 1
+
+
+class Csúcs:
+
+    def __init__(self, állapot, szülő=None, lépés=None, útköltség=0):
+        self.állapot = állapot
+        self.szülő = szülő
+        self.lépés = lépés
+        self.útköltség = útköltség
+        if szülő:
+            self.mélység = szülő.mélység + 1 #Megnézzük hogy van e szülője ha van akkor a mélysége a szülő mélységénel eggyel nagyobb érték
+        else:
+            self.mélység = 0 #Ellenkező esetben ő egy szülő szóval a mélysége 0
+
+    def __repr__(self): #ToString metódushoz hasonló kiirató függvény
+        return "<Csúcs: %s>" % (self.állapot, )
+
+        #return "%s" % (list(self.állapot),)
+
+    def út(self):   #visszaadja az utat
+        x, válasz = self, [self]
+        while x.szülő:
+            válasz.append(x.szülő)
+            x = x.szülő
+        return válasz
+
+    def megoldás(self): #visszaadja az utat forditott sorrendben a none nélkül
+        utam = self.út()
+        utam.reverse()
+        return [csúcs.lépés for csúcs in utam[1:]]
+
+    def kiterjeszt(self, feladat): #felépiti a fát
+        for (művelet, következő) in feladat.rákövetkező(self.állapot):
+            if következő not in [csúcs.állapot for csúcs in self.út()]: #megnézi hogy a következő benne van e már a csúcsokban, ha nem akkor létrehozunk egy új gyereket
+                yield Csúcs(következő, self, művelet,
+                            feladat.útköltség(self.útköltség, self.állapot, művelet,
+                                              következő)) #A yield visszaad viszont nem lép ki az adott függvényből
+
+
